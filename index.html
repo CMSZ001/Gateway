@@ -153,6 +153,27 @@
             color: var(--success)
         }
 
+        .ok-50 {
+            color: rgb(36, 170, 29);
+        }
+
+        .ok-100 {
+            color: rgb(66, 221, 63);
+        }
+
+        .ok-200 {
+            color: rgb(190, 246, 99);
+        }
+
+        .warn-250 {
+            color: rgb(246, 237, 68);
+        }
+
+        .slow {
+            color: rgb(246, 152, 51);
+        }
+
+
         ul.site-list {
             list-style: none;
             padding: 0;
@@ -374,7 +395,19 @@
                     const el = document.getElementById(`node-${idx}`);
                     const latencySpan = el.querySelector('.node-latency');
                     latencySpan.textContent = r.duration === Infinity ? '连接失败' : Math.round(r.duration) + 'ms';
-                    latencySpan.className = `node-latency ${r.duration === Infinity ? 'failed' : 'success'}`;
+                    let cls = 'node-latency';
+                    if (r.duration === Infinity) {
+                        cls += ' failed';
+                        latencySpan.textContent = '连接失败';
+                    } else {
+                        latencySpan.textContent = Math.round(r.duration) + 'ms';
+                        if (r.duration < 50) cls += ' ok-50';
+                        else if (r.duration <= 100) cls += ' ok-100';
+                        else if (r.duration <= 200) cls += ' ok-200';
+                        else if (r.duration <= 250) cls += ' warn-250';
+                        else cls += ' slow';
+                    }
+                    latencySpan.className = cls;
                     return { ...r, index: idx };
                 })
             );
