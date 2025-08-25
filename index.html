@@ -214,6 +214,21 @@
             background: var(--accent);
             color: #fff
         }
+
+        ul.site-list a:hover {
+            background: rgba(107, 223, 143, .8);
+            color: #fff;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            ul.site-list a:hover {
+                background: rgba(107, 223, 143, .7);
+            }
+        }
+
+        body.theme-dark ul.site-list a:hover {
+            background: rgba(107, 223, 143, .7);
+        }
     </style>
 </head>
 
@@ -289,7 +304,7 @@
             const routeKey = path === '' ? '/' : path.replace(/^\/+/, '');
 
             if (routeKey === '/') {
-                document.getElementById('spinner').style.display = 'none';
+                document.getElementById('spinner').style.display = 'none';   // 关键一行
                 document.getElementById('statusText').textContent = '请选择一个站点：';
                 const ul = document.createElement('ul');
                 ul.className = 'site-list';
@@ -298,7 +313,7 @@
                     const title = cfg.title || slug || '站点';
                     const li = document.createElement('li');
                     const a = document.createElement('a');
-                    a.href = first.url;
+                    a.href = slug;
                     a.textContent = title;
                     li.appendChild(a);
                     ul.appendChild(li);
