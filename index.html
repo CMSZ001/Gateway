@@ -302,11 +302,10 @@
 
             if (routeKey === '/') {
                 document.getElementById('statusText').textContent = '站点正在加载中';
-                document.getElementById('spinner').style.display = 'block';   // 确保加载圈可见
+                document.getElementById('spinner').style.display = 'block';
 
                 const ul = document.createElement('ul');
                 ul.className = 'site-list';
-
                 document.querySelector('.container').appendChild(ul);
 
                 for (const [slug, cfg] of Object.entries(routes)) {
