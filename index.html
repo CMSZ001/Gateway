@@ -341,8 +341,8 @@
         initTheme();
         btns.forEach(b => b.addEventListener('click', () => applyTheme(b.dataset.theme)));
 
-        let TEST_TIMEOUT = 5000;
-        let CACHE_DURATION = 300000;
+        let TEST_TIMEOUT = 500;
+        let CACHE_DURATION = 86400;
         let routes = {};
 
         (async () => {
@@ -355,17 +355,9 @@
                 console.warn('读取 config.json 失败，使用默认空配置');
             }
 
-            const fullPath = location.pathname + location.search;
-            // 去掉首尾的 /
-            const cleanPath = location.pathname.replace(/^\/+|\/+$/g, '');
-
-            // 1. 根目录
-            let routeKey = '/';
-            if (!cleanPath) {
-                routeKey = '/';
-            }
-            routeKey = cleanPath.split('/')[0] || '/';
-
+            const fullPath   = location.pathname + location.search;
+            const cleanPath  = location.pathname.replace(/^\/+|\/+$/g, '');
+            const routeKey = cleanPath ? cleanPath.split('/')[0] : '/';
 
             if (routeKey === '/') {
                 document.getElementById('spinner').style.display = 'block';
