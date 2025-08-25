@@ -330,6 +330,9 @@
                 document.getElementById('statusText').textContent = '未找到该路径';
                 return;
             }
+
+            document.getElementById('statusText').textContent = '正在为您选择最快节点…';
+
             const nodes = cfg.nodes;
             const cacheKey = `fastest_${routeKey}`;
 
