@@ -306,8 +306,6 @@
 
                 const ul = document.createElement('ul');
                 ul.className = 'site-list';
-                document.querySelector('.container').appendChild(ul);
-
                 for (const [slug, cfg] of Object.entries(routes)) {
                     const title = cfg.title || slug || '站点';
                     const li = document.createElement('li');
@@ -317,6 +315,7 @@
                     li.appendChild(a);
                     ul.appendChild(li);
                 }
+                document.querySelector('.container').appendChild(ul);
 
                 document.getElementById('spinner').style.display = 'none';
                 document.getElementById('statusText').textContent = '请选择站点';
