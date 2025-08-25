@@ -225,7 +225,7 @@ let routes         = {};
       const title = cfg.title || slug.slice(1) || '站点';
       const li = document.createElement('li');
       const a  = document.createElement('a');
-      a.href = first.url;
+      a.href = slug;
       a.textContent = title;
       li.appendChild(a);
       ul.appendChild(li);
