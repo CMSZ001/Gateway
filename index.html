@@ -301,12 +301,11 @@
                 : location.pathname.replace(/^\/+|\/+$/g, '').split('/')[0];
 
             if (routeKey === '/') {
-                document.getElementById('statusText').textContent = '正在加载站点';
-                document.getElementById('spinner').style.display = 'none';
+                document.getElementById('statusText').textContent = '站点正在加载中';
+                document.getElementById('spinner').style.display = '';
                 const ul = document.createElement('ul');
                 ul.className = 'site-list';
                 for (const [slug, cfg] of Object.entries(routes)) {
-                    const first = cfg.nodes[0];
                     const title = cfg.title || slug || '站点';
                     const li = document.createElement('li');
                     const a = document.createElement('a');
@@ -315,6 +314,8 @@
                     li.appendChild(a);
                     ul.appendChild(li);
                 }
+                document.getElementById('spinner').style.display = 'none';
+                document.getElementById('statusText').textContent = '请选择站点';
                 document.querySelector('.container').appendChild(ul);
                 return;
             }
