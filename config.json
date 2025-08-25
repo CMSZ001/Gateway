@@ -2,7 +2,7 @@
   "timeout": 5000,
   "cacheDuration": 86400,
   "routes": {
-    "/hw": {
+    "hw": {
       "title": "作业 | Docsify",
       "nodes": [
         {
@@ -15,7 +15,7 @@
         }
       ]
     },
-    "/blog": {
+    "blog": {
       "title": "博客",
       "nodes": [
         {
