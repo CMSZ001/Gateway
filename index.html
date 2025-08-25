@@ -1,12 +1,10 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>智能路由</title>
-
-    <!-- ========== 自适应 + 三档主题 ========== -->
     <style>
         :root {
             --bg: #ffffff;
@@ -180,7 +178,6 @@
             color: #fff
         }
 
-        /* 主题按钮组 */
         .theme-controls {
             position: absolute;
             top: 12px;
@@ -221,7 +218,6 @@
 </head>
 
 <body>
-    <!-- ===== 内嵌 SVG 图标 ===== -->
     <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
         <symbol id="icon-sun" viewBox="0 0 24 24">
             <path
@@ -237,7 +233,6 @@
         </symbol>
     </svg>
 
-    <!-- 主题按钮 -->
     <div class="theme-controls">
         <button class="theme-btn" data-theme="light" title="明亮"><svg>
                 <use href="#icon-sun" />
@@ -258,7 +253,6 @@
     </div>
 
     <script>
-        /* ---------- 主题 ---------- */
         const STORAGE_KEY = 'theme-preference';
         const btns = document.querySelectorAll('.theme-btn');
         function applyTheme(t) {
@@ -277,12 +271,10 @@
         initTheme();
         btns.forEach(b => b.addEventListener('click', () => applyTheme(b.dataset.theme)));
 
-        /* ---------- 路由 ---------- */
         let TEST_TIMEOUT = 5000;
-        let CACHE_DURATION = 300000;
+        let CACHE_DURATION = 86400;
         let routes = {};
 
-        /* ---------- 读取唯一配置 ---------- */
         (async () => {
             try {
                 const cfg = await (await fetch('./config.json')).json();
@@ -293,11 +285,9 @@
                 console.warn('读取 config.json 失败，使用默认空配置');
             }
 
-            /* ---------- 主逻辑 ---------- */
             const path = location.pathname.replace(/\/+$/, '');
             const routeKey = path === '' ? '/' : path.replace(/^\/+/, '');
 
-            /* 根路径：生成导航 */
             if (routeKey === '/') {
                 document.getElementById('spinner').style.display = 'none';
                 document.getElementById('statusText').textContent = '请选择一个站点：';
@@ -305,10 +295,10 @@
                 ul.className = 'site-list';
                 for (const [slug, cfg] of Object.entries(routes)) {
                     const first = cfg.nodes[0];
-                    const title = cfg.title || slug.slice(1) || '站点';
+                    const title = cfg.title || slug || '站点';
                     const li = document.createElement('li');
                     const a = document.createElement('a');
-                    a.href = slug;
+                    a.href = first.url;
                     a.textContent = title;
                     li.appendChild(a);
                     ul.appendChild(li);
@@ -317,7 +307,6 @@
                 return;
             }
 
-            /* 子路径：测速 + 跳转 */
             const cfg = routes[routeKey];
             if (!cfg) {
                 document.getElementById('spinner').style.display = 'none';
@@ -327,7 +316,6 @@
             const nodes = cfg.nodes;
             const cacheKey = `fastest_${routeKey.replace(/\//g, '_')}`;
 
-            /* 缓存命中直接跳转 */
             const cached = localStorage.getItem(cacheKey);
             if (cached) {
                 const { url, ts } = JSON.parse(cached);
@@ -337,7 +325,6 @@
                 }
             }
 
-            /* 缓存未命中，开始测速 */
             const statusDiv = document.getElementById('nodeStatus');
             nodes.forEach((n, idx) => {
                 const el = document.createElement('div');

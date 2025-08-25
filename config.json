@@ -2,19 +2,6 @@
   "timeout": 5000,
   "cacheDuration": 86400,
   "routes": {
-    "hw": {
-      "title": "作业 | Docsify",
-      "nodes": [
-        {
-          "name": "Netlify",
-          "url": "https://hw.acmsz.top"
-        },
-        {
-          "name": "Vercel",
-          "url": "https://vercel.hw.acmsz.top"
-        }
-      ]
-    },
     "blog": {
       "title": "博客",
       "nodes": [
@@ -25,6 +12,19 @@
         {
           "name": "Vercel",
           "url": "https://vercel.www.acmsz.top"
+        }
+      ]
+    },
+    "hw": {
+      "title": "作业 | Docsify",
+      "nodes": [
+        {
+          "name": "Netlify",
+          "url": "https://hw.acmsz.top"
+        },
+        {
+          "name": "Vercel",
+          "url": "https://vercel.hw.acmsz.top"
         }
       ]
     }
