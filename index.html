@@ -192,6 +192,7 @@
             position: absolute;
             top: 12px;
             right: 12px;
+            z-index: 100;
             display: flex;
             gap: 4px;
             background: var(--bg);
@@ -301,10 +302,11 @@
                 : location.pathname.replace(/^\/+|\/+$/g, '').split('/')[0];
 
             if (routeKey === '/') {
-                document.getElementById('spinner').style.display = 'none';
+                document.getElementById('spinner').style.display = 'block';
 
                 const ul = document.createElement('ul');
                 ul.className = 'site-list';
+
                 for (const [slug, cfg] of Object.entries(routes)) {
                     const title = cfg.title || slug || '站点';
                     const li = document.createElement('li');
@@ -314,76 +316,78 @@
                     li.appendChild(a);
                     ul.appendChild(li);
                 }
+
                 document.querySelector('.container').appendChild(ul);
 
+                document.getElementById('spinner').style.display = 'none';
                 document.getElementById('statusText').textContent = '请选择站点';
                 return;
+            }
 
+            const cfg = routes[routeKey];
+            if (!cfg) {
+                document.getElementById('spinner').style.display = 'none';
+                document.getElementById('statusText').textContent = '未找到该路径';
+                return;
+            }
+            const nodes = cfg.nodes;
+            const cacheKey = `fastest_${routeKey}`;
 
-                const cfg = routes[routeKey];
-                if (!cfg) {
-                    document.getElementById('spinner').style.display = 'none';
-                    document.getElementById('statusText').textContent = '未找到该路径';
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) {
+                const { url, ts } = JSON.parse(cached);
+                if (Date.now() - ts < CACHE_DURATION) {
+                    document.getElementById('statusText').innerHTML = `正在跳转 <a href="${url}">${url}</a>`;
+                    location.replace(url + fullPath.replace(/^\/[^\/]+/, ''));
                     return;
                 }
-                const nodes = cfg.nodes;
-                const cacheKey = `fastest_${routeKey}`;
+            }
 
-                const cached = localStorage.getItem(cacheKey);
-                if (cached) {
-                    const { url, ts } = JSON.parse(cached);
-                    if (Date.now() - ts < CACHE_DURATION) {
-                        document.getElementById('statusText').innerHTML = `正在跳转 <a href="${url}">${url}</a>`;
-                        location.replace(url + fullPath.replace(/^\/[^\/]+/, ''));
-                        return;
-                    }
+            const statusDiv = document.getElementById('nodeStatus');
+            nodes.forEach((n, idx) => {
+                const el = document.createElement('div');
+                el.className = 'node-item';
+                el.id = `node-${idx}`;
+                el.innerHTML = `<span class="node-name">${n.name}</span><span class="node-latency">测速中…</span>`;
+                statusDiv.appendChild(el);
+            });
+
+            async function testNode(node) {
+                const st = performance.now();
+                const ctrl = new AbortController();
+                setTimeout(() => ctrl.abort(), TEST_TIMEOUT);
+                try {
+                    await fetch(`${node.url}/favicon.ico`, { mode: 'no-cors', signal: ctrl.signal });
+                    return { ...node, duration: performance.now() - st };
+                } catch {
+                    return { ...node, duration: Infinity };
                 }
+            }
 
-                const statusDiv = document.getElementById('nodeStatus');
-                nodes.forEach((n, idx) => {
-                    const el = document.createElement('div');
-                    el.className = 'node-item';
-                    el.id = `node-${idx}`;
-                    el.innerHTML = `<span class="node-name">${n.name}</span><span class="node-latency">测速中…</span>`;
-                    statusDiv.appendChild(el);
-                });
+            const results = await Promise.all(
+                nodes.map(async (n, idx) => {
+                    const r = await testNode(n);
+                    const el = document.getElementById(`node-${idx}`);
+                    const latencySpan = el.querySelector('.node-latency');
+                    latencySpan.textContent = r.duration === Infinity ? '连接失败' : Math.round(r.duration) + 'ms';
+                    latencySpan.className = `node-latency ${r.duration === Infinity ? 'failed' : 'success'}`;
+                    return { ...r, index: idx };
+                })
+            );
 
-                async function testNode(node) {
-                    const st = performance.now();
-                    const ctrl = new AbortController();
-                    setTimeout(() => ctrl.abort(), TEST_TIMEOUT);
-                    try {
-                        await fetch(`${node.url}/favicon.ico`, { mode: 'no-cors', signal: ctrl.signal });
-                        return { ...node, duration: performance.now() - st };
-                    } catch {
-                        return { ...node, duration: Infinity };
-                    }
-                }
+            const fastest = results
+                .filter(r => r.duration !== Infinity)
+                .sort((a, b) => a.duration - b.duration)[0];
 
-                const results = await Promise.all(
-                    nodes.map(async (n, idx) => {
-                        const r = await testNode(n);
-                        const el = document.getElementById(`node-${idx}`);
-                        const latencySpan = el.querySelector('.node-latency');
-                        latencySpan.textContent = r.duration === Infinity ? '连接失败' : Math.round(r.duration) + 'ms';
-                        latencySpan.className = `node-latency ${r.duration === Infinity ? 'failed' : 'success'}`;
-                        return { ...r, index: idx };
-                    })
-                );
-
-                const fastest = results
-                    .filter(r => r.duration !== Infinity)
-                    .sort((a, b) => a.duration - b.duration)[0];
-
-                if (fastest) {
-                    document.getElementById(`node-${fastest.index}`).classList.add('fastest');
-                    localStorage.setItem(cacheKey, JSON.stringify({ url: fastest.url, ts: Date.now() }));
-                    setTimeout(() => location.replace(fastest.url + fullPath.replace(/^\/[^\/]+/, '')), 600);
-                } else {
-                    document.getElementById('spinner').style.display = 'none';
-                    document.getElementById('statusText').textContent = '全部节点不可用，请稍后再试。';
-                }
-            }) ();
+            if (fastest) {
+                document.getElementById(`node-${fastest.index}`).classList.add('fastest');
+                localStorage.setItem(cacheKey, JSON.stringify({ url: fastest.url, ts: Date.now() }));
+                setTimeout(() => location.replace(fastest.url + fullPath.replace(/^\/[^\/]+/, '')), 600);
+            } else {
+                document.getElementById('spinner').style.display = 'none';
+                document.getElementById('statusText').textContent = '全部节点不可用，请稍后再试。';
+            }
+        })();
     </script>
 </body>
 
