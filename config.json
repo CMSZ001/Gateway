@@ -1,0 +1,26 @@
+{
+  "timeout": 5000,
+  "cacheDuration": 300000,
+  "routes": {
+    "/hw": {
+      "title": "硬件下载站",
+      "nodes": [
+        { "name": "节点 A", "url": "https://hw-a.example.com" },
+        { "name": "节点 B", "url": "https://hw-b.example.com" }
+      ]
+    },
+    "/blog": {
+      "title": "官方博客",
+      "nodes": [
+        { "name": "节点 1", "url": "https://blog1.example.com" },
+        { "name": "节点 2", "url": "https://blog2.example.com" }
+      ]
+    },
+    "/shop": {
+      "title": "商城镜像",
+      "nodes": [
+        { "name": "主站", "url": "https://shop.example.com" }
+      ]
+    }
+  }
+}

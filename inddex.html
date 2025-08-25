@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>智能路由</title>
+
+  <!-- ========== 自适应 + 三档主题 ========== -->
+  <style>
+    :root{
+      --bg:#ffffff;
+      --bg-soft:#f5f5f5;
+      --fg:#111;
+      --fg-soft:#666;
+      --accent:#3498db;
+      --danger:#e74c3c;
+      --success:#27ae60;
+      --radius:8px;
+      --shadow:0 2px 8px rgba(0,0,0,.1);
+      --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    }
+    @media (prefers-color-scheme:dark){
+      :root{
+        --bg:#121212;
+        --bg-soft:#1e1e1e;
+        --fg:#e5e5e5;
+        --fg-soft:#aaa;
+        --shadow:0 2px 8px rgba(0,0,0,.35);
+      }
+    }
+    body.theme-light{
+      --bg:#ffffff;
+      --bg-soft:#f5f5f5;
+      --fg:#111;
+      --shadow:0 2px 8px rgba(0,0,0,.1);
+    }
+    body.theme-dark{
+      --bg:#121212;
+      --bg-soft:#1e1e1e;
+      --fg:#e5e5e5;
+      --fg-soft:#aaa;
+      --shadow:0 2px 8px rgba(0,0,0,.35);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:var(--bg-soft);
+      color:var(--fg);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:100vh;
+      padding:20px;
+      transition:background .3s,color .3s;
+    }
+    .container{
+      width:100%;
+      max-width:480px;
+      background:var(--bg);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:clamp(24px,4vw,40px);
+      text-align:center;
+    }
+    h1{margin:0 0 20px;font-size:clamp(20px,5vw,26px)}
+    .spinner{
+      width:40px;height:40px;
+      border:4px solid var(--bg-soft);
+      border-top-color:var(--accent);
+      border-radius:50%;
+      animation:spin 1s linear infinite;
+      margin:0 auto 16px;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    #statusText{margin:0 0 20px;color:var(--fg-soft);font-size:clamp(14px,2.5vw,16px)}
+    #nodeStatus{margin-top:20px;text-align:left}
+    .node-item{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:12px 16px;
+      margin:8px 0;
+      border-radius:var(--radius);
+      background:var(--bg-soft);
+      transition:all .3s ease;
+      border:2px solid transparent;
+    }
+    .node-item:hover{
+      background:rgba(107,223,143,.3);
+      transform:translateX(5px);
+    }
+    .node-item.fastest{
+      background:rgba(107,223,143,.3);
+      border-color:rgba(107,223,143,.5);
+    }
+    @media (prefers-color-scheme:dark){
+      .node-item.fastest{
+        background:rgba(107,223,143,.2);
+        border-color:rgba(107,223,143,.6);
+      }
+    }
+    body.theme-dark .node-item.fastest{
+      background:rgba(107,223,143,.2);
+      border-color:rgba(107,223,143,.6);
+    }
+    .node-name{font-weight:600}
+    .node-latency{font-weight:600}
+    .failed{color:var(--danger)}
+    .success{color:var(--success)}
+    ul.site-list{list-style:none;padding:0;margin:20px 0 0}
+    ul.site-list li{margin:8px 0}
+    ul.site-list a{
+      display:block;
+      padding:12px 16px;
+      border-radius:var(--radius);
+      background:var(--bg-soft);
+      color:var(--fg);
+      text-decoration:none;
+      transition:background .2s,color .2s;
+    }
+    ul.site-list a:hover{background:var(--accent);color:#fff}
+
+    /* 主题按钮组 */
+    .theme-controls{
+      position:absolute;
+      top:12px;
+      right:12px;
+      display:flex;
+      gap:4px;
+      background:var(--bg);
+      padding:4px;
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .theme-btn{
+      width:32px;height:32px;
+      display:flex;align-items:center;justify-content:center;
+      border:0;border-radius:4px;
+      background:transparent;cursor:pointer;color:var(--fg-soft);
+      transition:background .2s,color .2s;
+    }
+    .theme-btn svg{width:18px;height:18px;fill:currentColor}
+    .theme-btn.active{background:var(--accent);color:#fff}
+  </style>
+</head>
+
+<body>
+  <!-- ===== 内嵌 SVG 图标 ===== -->
+  <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="icon-sun" viewBox="0 0 24 24">
+      <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"/>
+    </symbol>
+    <symbol id="icon-moon" viewBox="0 0 24 24">
+      <path d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z"/>
+    </symbol>
+    <symbol id="icon-auto" viewBox="0 0 24 24">
+      <path d="M4 6a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM19 9.5a.5.5 0 00-.5-.5h-13a.5.5 0 00-.5.5V14a.5.5 0 00.5.5h13a.5.5 0 00.5-.5V9.5zM8 16a1 1 0 011-1h6a1 1 0 110 2H9a1 1 0 01-1-1z"/>
+    </symbol>
+  </svg>
+
+  <!-- 主题按钮 -->
+  <div class="theme-controls">
+    <button class="theme-btn" data-theme="light" title="明亮"><svg><use href="#icon-sun"/></svg></button>
+    <button class="theme-btn" data-theme="dark"  title="黑暗"><svg><use href="#icon-moon"/></svg></button>
+    <button class="theme-btn" data-theme="auto"  title="自动"><svg><use href="#icon-auto"/></svg></button>
+  </div>
+
+  <div class="container">
+    <h1>智能路由</h1>
+    <div class="spinner" id="spinner"></div>
+    <p id="statusText">正在为您选择最快节点…</p>
+    <div id="nodeStatus" class="status"></div>
+  </div>
+
+<script>
+/* ---------- 主题 ---------- */
+const STORAGE_KEY='theme-preference';
+const btns=document.querySelectorAll('.theme-btn');
+function applyTheme(t){
+  document.body.className=t==='auto'?'':`theme-${t}`;
+  btns.forEach(b=>b.classList.toggle('active',b.dataset.theme===t));
+  localStorage.setItem(STORAGE_KEY,t);
+}
+function initTheme(){
+  const saved=localStorage.getItem(STORAGE_KEY)||'auto';
+  applyTheme(saved);
+  window.matchMedia('(prefers-color-scheme: dark)')
+        .addEventListener('change',()=>{
+          if(localStorage.getItem(STORAGE_KEY)==='auto') applyTheme('auto');
+        });
+}
+initTheme();
+btns.forEach(b=>b.addEventListener('click',()=>applyTheme(b.dataset.theme)));
+
+/* ---------- 路由 ---------- */
+let TEST_TIMEOUT   = 5000;
+let CACHE_DURATION = 300000;
+let routes         = {};
+
+/* ---------- 读取唯一配置 ---------- */
+(async () => {
+  try {
+    const cfg = await (await fetch('./config.json')).json();
+    TEST_TIMEOUT   = cfg.TEST_TIMEOUT   ?? TEST_TIMEOUT;
+    CACHE_DURATION = cfg.CACHE_DURATION ?? CACHE_DURATION;
+    routes         = cfg.routes          ?? {};
+  } catch (e) {
+    console.warn('读取 config.json 失败，使用默认空配置');
+  }
+
+  /* ---------- 主逻辑 ---------- */
+  const path = location.pathname.replace(/\/+$/,'');
+  const routeKey = path === '' ? '/' : path;
+
+  /* 根路径：生成导航 */
+  if (routeKey === '/') {
+    document.getElementById('spinner').style.display='none';
+    document.getElementById('statusText').textContent='请选择一个站点：';
+    const ul = document.createElement('ul');
+    ul.className = 'site-list';
+    for (const [slug, cfg] of Object.entries(routes)) {
+      const first = cfg.nodes[0];
+      const title = cfg.title || slug.slice(1) || '站点';
+      const li = document.createElement('li');
+      const a  = document.createElement('a');
+      a.href = first.url;
+      a.textContent = title;
+      li.appendChild(a);
+      ul.appendChild(li);
+    }
+    document.querySelector('.container').appendChild(ul);
+    return;
+  }
+
+  /* 子路径：测速 + 跳转 */
+  const cfg = routes[routeKey];
+  if (!cfg) {
+    document.getElementById('spinner').style.display='none';
+    document.getElementById('statusText').textContent='未找到该路径。';
+    return;
+  }
+  const nodes = cfg.nodes;
+  const cacheKey = `fastest_${routeKey.replace(/\//g,'_')}`;
+
+  /* 缓存命中直接跳转 */
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) {
+    const {url,ts} = JSON.parse(cached);
+    if (Date.now() - ts < CACHE_DURATION) {
+      location.replace(url);
+      return;
+    }
+  }
+
+  /* 缓存未命中，开始测速 */
+  const statusDiv = document.getElementById('nodeStatus');
+  nodes.forEach((n, idx) => {
+    const el = document.createElement('div');
+    el.className = 'node-item';
+    el.id = `node-${idx}`;
+    el.innerHTML = `<span class="node-name">${n.name}</span><span class="node-latency">测速中…</span>`;
+    statusDiv.appendChild(el);
+  });
+
+  async function testNode(node) {
+    const st = performance.now();
+    const ctrl = new AbortController();
+    setTimeout(() => ctrl.abort(), TEST_TIMEOUT);
+    try {
+      await fetch(`${node.url}/favicon.ico`, {mode:'no-cors', signal:ctrl.signal});
+      return {...node, duration: performance.now() - st};
+    } catch {
+      return {...node, duration: Infinity};
+    }
+  }
+
+  const results = await Promise.all(
+    nodes.map(async (n, idx) => {
+      const r = await testNode(n);
+      const el = document.getElementById(`node-${idx}`);
+      const latencySpan = el.querySelector('.node-latency');
+      latencySpan.textContent = r.duration === Infinity ? '连接失败' : Math.round(r.duration) + 'ms';
+      latencySpan.className = `node-latency ${r.duration === Infinity ? 'failed' : 'success'}`;
+      return {...r, index: idx};
+    })
+  );
+
+  const fastest = results
+    .filter(r => r.duration !== Infinity)
+    .sort((a,b) => a.duration - b.duration)[0];
+
+  if (fastest) {
+    document.getElementById(`node-${fastest.index}`).classList.add('fastest');
+    localStorage.setItem(cacheKey, JSON.stringify({url: fastest.url, ts: Date.now()}));
+    setTimeout(() => location.replace(fastest.url), 600);
+  } else {
+    document.getElementById('spinner').style.display='none';
+    document.getElementById('statusText').textContent='全部节点不可用，请稍后再试。';
+  }
+})();
+</script>
+</body>
+</html>
