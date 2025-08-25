@@ -321,11 +321,6 @@
     </footer>
 
     <script>
-        (() => {
-          const clean = location.pathname.replace(/^\/+|\/+$/g, '');
-          const key   = clean ? clean.split('/')[0] : '/';
-          console.log('pathname:', location.pathname, 'routeKey:', key);
-        })();
         const STORAGE_KEY = 'theme-preference';
         const btns = document.querySelectorAll('.theme-btn');
 
@@ -352,7 +347,7 @@
 
         (async () => {
             try {
-                const cfg = await (await fetch('./config.json')).json();
+                const cfg = await (await fetch('/config.json')).json();
                 TEST_TIMEOUT = cfg.TEST_TIMEOUT ?? TEST_TIMEOUT;
                 CACHE_DURATION = cfg.CACHE_DURATION ?? CACHE_DURATION;
                 routes = cfg.routes ?? {};
@@ -404,7 +399,6 @@
             if (cached) {
                 const { url, ts } = JSON.parse(cached);
                 if (Date.now() - ts < CACHE_DURATION) {
-                    // 文字 & 样式一起改
                     document.getElementById('statusText').innerHTML =
                         `即将为您跳转至 <a class="jump-link" href="${url}">${url}</a>`;
                     location.replace(url + fullPath.replace(/^\/[^\/]+/, ''));
