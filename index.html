@@ -321,6 +321,11 @@
     </footer>
 
     <script>
+        (() => {
+          const clean = location.pathname.replace(/^\/+|\/+$/g, '');
+          const key   = clean ? clean.split('/')[0] : '/';
+          console.log('pathname:', location.pathname, 'routeKey:', key);
+        })();
         const STORAGE_KEY = 'theme-preference';
         const btns = document.querySelectorAll('.theme-btn');
 
