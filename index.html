@@ -356,9 +356,22 @@
             }
 
             const fullPath = location.pathname + location.search;
-            const routeKey = location.pathname === '/'
-                ? '/'
-                : location.pathname.replace(/^\/+|\/+$/g, '').split('/')[0];
+            // 去掉首尾的 /
+            const cleanPath = location.pathname.replace(/^\/+|\/+$/g, '');
+
+            // 1. 根目录
+            let routeKey = '/';
+            if (!cleanPath) {
+                routeKey = '/';
+            }
+            // 2. 只有一级（/hw）
+            else if (!cleanPath.includes('/')) {
+                routeKey = cleanPath;
+            }
+            // 3. 多级路径（/hw/...），取第一级
+            else {
+                routeKey = cleanPath.split('/')[0];
+            }
 
             if (routeKey === '/') {
                 document.getElementById('spinner').style.display = 'block';
