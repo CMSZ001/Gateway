@@ -1,6 +1,6 @@
 {
   "timeout": 5000,
-  "cacheDuration": 300000,
+  "cacheDuration": 86400,
   "routes": {
     "/hw": {
       "title": "作业 | Docsify",
