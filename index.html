@@ -364,14 +364,8 @@
             if (!cleanPath) {
                 routeKey = '/';
             }
-            // 2. 只有一级（/hw）
-            else if (!cleanPath.includes('/')) {
-                routeKey = cleanPath;
-            }
-            // 3. 多级路径（/hw/...），取第一级
-            else {
-                routeKey = cleanPath.split('/')[0];
-            }
+            routeKey = cleanPath.split('/')[0] || '/';
+
 
             if (routeKey === '/') {
                 document.getElementById('spinner').style.display = 'block';
