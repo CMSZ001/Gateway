@@ -1,5 +1,5 @@
 {
-  "timeout": 5000,
+  "timeout": 1000,
   "cacheDuration": 86400,
   "routes": {
     "blog": {
@@ -24,7 +24,7 @@
         },
         {
           "name": "Vercel",
-          "url": "https://vercel.hw.acmsz.top"
+          "url": "https://hw-vercel.acmsz.top"
         }
       ]
     }
